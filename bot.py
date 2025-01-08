@@ -1,6 +1,6 @@
 import cohere
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
 # Clés API
 TELEGRAM_TOKEN = "7797419882:AAF-GAzNn37bdtgRB942vxLGM0NkSimQ0oo"
@@ -83,7 +83,7 @@ def main():
     application.add_handler(CommandHandler("bonsplans", bons_plans))
 
     # Handler pour les messages texte
-    application.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_text))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
     # Lancer le bot
     application.run_polling()
