@@ -25,10 +25,14 @@ def cohere_query(prompt):
 def start(update, context: CallbackContext):
     message = (
         "Bienvenue sur DailyBizBot ! Voici ce que je peux faire pour toi :\n\n"
-        "1️⃣ /news - Obtiens 5 idées de business\n"
-        "2️⃣ /plan - Génère un business plan simple\n"
-        "3️⃣ /anecdote - Reçois une anecdote motivante\n"
-        "4️⃣ /bonsplans - Découvre des bons plans\n\n"
+        "1⃣ /news - Obtiens 5 idées de business\n"
+        "2⃣ /plan - Génère un business plan simple\n"
+        "3⃣ /anecdote - Reçois une anecdote motivante\n"
+        "4⃣ /bonsplans - Découvre des bons plans\n\n"
+        "Prochainement :\n"
+        "- Analyse personnalisée de tes compétences pour trouver des opportunités uniques\n"
+        "- Suivi des tendances de marché en temps réel\n"
+        "- Communauté d'entrepreneurs intégrée\n\n"
         "Tape une commande pour commencer."
     )
     update.message.reply_text(message)
