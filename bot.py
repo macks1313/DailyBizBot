@@ -20,11 +20,17 @@ def openai_query(prompt):
             max_tokens=150,
             temperature=0.7,
         )
-        logger.info("Réponse reçue d'OpenAI")
+        logger.info(f"Réponse OpenAI brute : {response}")
         return response["choices"][0]["message"]["content"].strip()
+    except openai.error.RateLimitError:
+        logger.error("Quota dépassé pour l'API OpenAI.")
+        return "Je ne peux pas traiter ta demande, mon quota OpenAI est dépassé."
+    except openai.error.AuthenticationError:
+        logger.error("Erreur d'authentification avec OpenAI.")
+        return "Problème avec la clé API OpenAI."
     except Exception as e:
-        logger.error(f"Erreur lors de la requête OpenAI : {e}")
-        return "Une erreur est survenue. Réessayez plus tard."
+        logger.error(f"Erreur inattendue : {e}")
+        return f"Une erreur est survenue : {e}"
 
 # Commande /start
 async def start(update: Update, context: CallbackContext):
