@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 # Récupération des clés API depuis les variables d'environnement
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Vérification des clés
 if not TELEGRAM_TOKEN:
