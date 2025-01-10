@@ -2,14 +2,15 @@ import openai
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 import logging
+import os
 
 # Configuration des logs
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Clés API
-TELEGRAM_TOKEN = "7797419882:AAF-GAzNn37bdtgRB942vxLGM0NkSimQ0oo"
-OPENAI_API_KEY = "API_KEY_OPENAI"
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_T")
+OPENAI_API_KEY = os.getenv("OPENAI_API")
 
 # Configuration de l'API OpenAI
 openai.api_key = OPENAI_API_KEY
