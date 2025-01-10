@@ -1,106 +1,108 @@
-import logging
-import os
 import openai
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
+import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configuration des logs
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configuration de l'API OpenAI
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Clés API
+TELEGRAM_TOKEN = "VOTRE_TOKEN_TELEGRAM"
+OPENAI_API_KEY = "VOTRE_API_KEY_OPENAI"
 
+# Configuration de l'API OpenAI
+openai.api_key = OPENAI_API_KEY
+
+# Fonction pour interagir avec l'API OpenAI
 def openai_query(prompt):
-    logger.info(f"Envoi du prompt à OpenAI : {prompt}")
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=150,
-            temperature=0.7,
+            max_tokens=200,
+            temperature=0.8,
         )
-        logger.info(f"Réponse OpenAI brute : {response}")
         return response["choices"][0]["message"]["content"].strip()
-    except openai.error.RateLimitError:
-        logger.error("Quota dépassé pour l'API OpenAI.")
-        return "Je ne peux pas traiter ta demande, mon quota OpenAI est dépassé."
-    except openai.error.AuthenticationError:
-        logger.error("Erreur d'authentification avec OpenAI.")
-        return "Problème avec la clé API OpenAI."
     except Exception as e:
-        logger.error(f"Erreur inattendue : {e}")
-        return f"Une erreur est survenue : {e}"
+        logger.error(f"Erreur lors de la requête OpenAI : {e}")
+        return "Désolé, une erreur est survenue. Réessaye plus tard."
 
 # Commande /start
 async def start(update: Update, context: CallbackContext):
-    logger.info("Commande /start reçue")
     message = (
-        "👋 Bienvenue sur DailyBizBot, ton assistant préféré en entrepreneuriat et marketing ! 🎯\n\n"
-        "Voici ce que je peux faire pour toi :\n\n"
-        "1⃣ /news - Obtiens 5 idées de business brillantes ✨\n"
-        "2⃣ /plan - Génère un business plan simple et efficace 📈\n"
-        "3⃣ /anecdote - Une anecdote motivante pour te booster 🚀\n"
-        "4⃣ /bonsplans - Découvre des bons plans irrésistibles 💡\n\n"
-        "💬 Et si tu veux discuter, je suis là pour toi. Pose-moi tes questions ou partage tes idées, mais attention, je ne mâche pas mes mots ! 😏\n\n"
-        "Tape une commande pour commencer ou dis-moi ce qui te passe par la tête."
+        "👋 Salut, moi c'est DailyBizBot, ton partenaire en business et marketing, mais pas que. "
+        "Je suis là pour te guider, te challenger et, soyons honnêtes, te taquiner un peu aussi ! 😏\n\n"
+        "Voici ce que je peux faire pour toi :\n"
+        "1⃣ /news - Des idées de business qui claquent 🚀\n"
+        "2⃣ /plan - Un plan simple mais impactant 📈\n"
+        "3⃣ /anecdote - Une dose d'inspiration (ou d'ironie) 💡\n"
+        "4⃣ /bonsplans - Les bons plans à ne pas rater 🤑\n\n"
+        "💬 Dis-moi ce que tu veux savoir ou fais juste un coucou. Mais prépare-toi, je ne mâche pas mes mots !"
     )
     await update.message.reply_text(message)
 
 # Commande /news
 async def news_business(update: Update, context: CallbackContext):
-    logger.info("Commande /news reçue")
     prompt = (
-        "Donne-moi 5 idées de business actuelles, chacune sur un thème différent "
-        "(technologie, restauration, services locaux, freelancing, e-commerce)."
+        "Donne-moi 5 idées de business actuelles et innovantes, sur des thèmes variés : technologie, restauration, services locaux, freelancing, et e-commerce."
     )
-    news = openai_query(prompt)
-    await update.message.reply_text(f"📢 Voici 5 idées de business pour toi :\n\n{news}")
+    logger.info("Commande /news reçue")
+    ideas = openai_query(prompt)
+    await update.message.reply_text(f"📢 Voici 5 idées de business pour toi :\n\n{ideas}")
 
 # Commande /plan
 async def generate_business_plan(update: Update, context: CallbackContext):
+    prompt = (
+        "Génère un business plan simple pour une idée donnée. Structure : problème, solution, marché cible, modèle économique, étapes clés."
+    )
     logger.info("Commande /plan reçue")
-    prompt = "Crée un business plan simple pour une idée donnée. Structure : marché, besoin, solution, revenus."
     plan = openai_query(prompt)
-    await update.message.reply_text(f"📝 Voici un exemple de business plan :\n\n{plan}")
+    await update.message.reply_text(f"📝 Voici un business plan :\n\n{plan}")
 
 # Commande /anecdote
 async def anecdote(update: Update, context: CallbackContext):
+    prompt = (
+        "Raconte une anecdote motivante et un peu sarcastique sur un entrepreneur célèbre."
+    )
     logger.info("Commande /anecdote reçue")
-    prompt = "Donne une courte anecdote motivante sur l'entrepreneuriat."
-    anecdote = openai_query(prompt)
-    await update.message.reply_text(f"💡 Anecdote motivante :\n\n{anecdote}")
+    story = openai_query(prompt)
+    await update.message.reply_text(f"💡 Voici une anecdote :\n\n{story}")
 
 # Commande /bonsplans
 async def bons_plans(update: Update, context: CallbackContext):
+    prompt = "Partage un bon plan pour les entrepreneurs débutants en 2025."
     logger.info("Commande /bonsplans reçue")
-    prompt = "Partage un bon plan récent pour un entrepreneur débutant en France."
-    bon_plan = openai_query(prompt)
-    await update.message.reply_text(f"🔥 Bon plan du jour :\n\n{bon_plan}")
+    deal = openai_query(prompt)
+    await update.message.reply_text(f"🔥 Bon plan du jour :\n\n{deal}")
 
 # Réponse aux messages texte
 async def handle_text(update: Update, context: CallbackContext):
     user_message = update.message.text
+    prompt = (
+        f"Tu es une assistante experte en entrepreneuriat et marketing, avec une touche sarcastique. "
+        f"Réponds en français de manière engageante et utile à ce message : {user_message}"
+    )
     logger.info(f"Message texte reçu : {user_message}")
-    prompt = f"Tu es une assistante experte en entrepreneuriat et marketing. Réponds en français de manière concise et engageante à ce message utilisateur : {user_message}"
     response = openai_query(prompt)
     await update.message.reply_text(response)
 
 # Configuration du bot Telegram
 def main():
-    logger.info("Initialisation du bot")
-    application = Application.builder().token(os.getenv("TELEGRAM_TOKEN")).build()
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
 
+    # Commandes du bot
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("news", news_business))
     application.add_handler(CommandHandler("plan", generate_business_plan))
     application.add_handler(CommandHandler("anecdote", anecdote))
     application.add_handler(CommandHandler("bonsplans", bons_plans))
+
+    # Handler pour les messages texte
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
-    logger.info("Lancement du bot")
+    logger.info("Le bot est en cours de démarrage...")
     application.run_polling()
 
 if __name__ == "__main__":
     main()
-    
