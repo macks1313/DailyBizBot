@@ -29,6 +29,9 @@ if not OPENAI_API_KEY:
 
 openai.api_key = OPENAI_API_KEY
 
+# États pour les conversations interactives
+PROBLEME, NEWS_THEME = range(2)
+
 # Fonction pour interagir avec OpenAI
 def openai_query(prompt):
     try:
@@ -36,7 +39,7 @@ def openai_query(prompt):
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=50,  # Réponse courte
-            temperature=0.8,
+            temperature=0.8,  # Ton légèrement créatif
         )
         return response["choices"][0]["message"]["content"].strip()
     except Exception as e:
@@ -53,7 +56,8 @@ async def start(update: Update, context: CallbackContext):
         "✅ /validation - Analyse et améliore une idée de business.\n"
         "📈 /marketing - Obtiens une stratégie marketing personnalisée pour ton projet.\n"
         "🛠️ /ressources - Accède à des outils et ressources pratiques pour entrepreneurs.\n"
-        "⏰ /notifications - Planifie des notifications quotidiennes pour recevoir des idées ou conseils.\n\n"
+        "⏰ /notifications - Planifie des notifications quotidiennes pour recevoir des idées ou conseils.\n"
+        "❌ /cancel - Annule la commande en cours.\n\n"
         "📬 Tape une commande ou pose-moi une question directement. Je suis prêt à t’aider à réussir ! 🚀"
     )
     await update.message.reply_text(message, parse_mode="Markdown")
@@ -63,9 +67,18 @@ async def generate_business_plan_start(update: Update, context: CallbackContext)
     await update.message.reply_text(
         "📋 *Créons ton business plan simplifié !*\n\n"
         "🚀 Première étape : Décris le *problème* que ton business résout. "
-        "Exemple : Les gens manquent de temps pour cuisiner sainement."
+        "Exemple : Les gens manquent de temps pour cuisiner sainement.\n\n"
+        "❌ Tape /cancel à tout moment pour annuler."
     )
-    return 1
+    return PROBLEME
+
+async def collect_probleme(update: Update, context: CallbackContext):
+    probleme = update.message.text
+    await update.message.reply_text(
+        f"👍 Merci ! Maintenant, quelle est la *solution* pour résoudre ce problème ?\n\n"
+        "❌ Tape /cancel à tout moment pour annuler."
+    )
+    return ConversationHandler.END
 
 # Commande /news
 async def news_start(update: Update, context: CallbackContext):
@@ -82,11 +95,23 @@ async def news_start(update: Update, context: CallbackContext):
         "3️⃣ 🎨 Freelancing\n"
         "4️⃣ 📦 E-commerce\n"
         "5️⃣ 📚 Éducation\n\n"
-        "👉 Clique sur un thème ou tape un autre domaine qui t'intéresse.",
+        "👉 Clique sur un thème ou tape un autre domaine qui t'intéresse.\n"
+        "❌ Tape /cancel à tout moment pour annuler.",
         reply_markup=reply_markup,
         parse_mode="Markdown"
     )
-    return 2
+    return NEWS_THEME
+
+async def collect_news_theme(update: Update, context: CallbackContext):
+    theme = update.message.text
+    await update.message.reply_text(
+        f"🌟 Super choix ! Voici quelques idées dans le thème : *{theme}*.\n\n"
+        "💡 Exemple d'idées :\n"
+        "1. Application de gestion d'équipe.\n"
+        "2. Plateforme de freelance spécialisée.\n\n"
+        "❌ Tape /cancel si tu veux arrêter."
+    )
+    return ConversationHandler.END
 
 # Commande /validation
 async def validation_business(update: Update, context: CallbackContext):
@@ -94,7 +119,6 @@ async def validation_business(update: Update, context: CallbackContext):
         "✅ *Validation d'idée de business* :\n\n"
         "Décris ton idée, et je te donnerai une analyse complète, incluant la viabilité, les obstacles, et des suggestions d'amélioration. 💡"
     )
-    return 3
 
 # Commande /marketing
 async def marketing(update: Update, context: CallbackContext):
@@ -102,7 +126,6 @@ async def marketing(update: Update, context: CallbackContext):
         "📈 *Stratégie marketing personnalisée* :\n\n"
         "Décris ton produit/service et ta cible, et je te proposerai une stratégie marketing adaptée ! 🚀"
     )
-    return 4
 
 # Commande /ressources
 async def resources(update: Update, context: CallbackContext):
@@ -117,12 +140,12 @@ async def resources(update: Update, context: CallbackContext):
     )
     await update.message.reply_text(message, parse_mode="Markdown")
 
-# Commande /notifications
-async def notifications(update: Update, context: CallbackContext):
+# Commande /cancel
+async def cancel(update: Update, context: CallbackContext):
     await update.message.reply_text(
-        "🔔 *Planification des notifications* :\n\n"
-        "Utilise la commande /news pour choisir un thème et une heure, afin de recevoir des idées ou conseils quotidiennement. ⏰"
+        "❌ *Commande annulée.* Si tu veux recommencer, tape une nouvelle commande ou pose-moi une question !"
     )
+    return ConversationHandler.END
 
 # Gestion des messages texte non commandés
 async def handle_text(update: Update, context: CallbackContext):
@@ -146,16 +169,31 @@ async def handle_text(update: Update, context: CallbackContext):
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
+    # Gestion des conversations
+    plan_handler = ConversationHandler(
+        entry_points=[CommandHandler("plan", generate_business_plan_start)],
+        states={
+            PROBLEME: [MessageHandler(filters.TEXT & ~filters.COMMAND, collect_probleme)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+    )
+
+    news_handler = ConversationHandler(
+        entry_points=[CommandHandler("news", news_start)],
+        states={
+            NEWS_THEME: [MessageHandler(filters.TEXT & ~filters.COMMAND, collect_news_theme)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+    )
+
     # Ajout des commandes
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("plan", generate_business_plan_start))
-    application.add_handler(CommandHandler("news", news_start))
+    application.add_handler(plan_handler)
+    application.add_handler(news_handler)
     application.add_handler(CommandHandler("validation", validation_business))
     application.add_handler(CommandHandler("marketing", marketing))
     application.add_handler(CommandHandler("ressources", resources))
-    application.add_handler(CommandHandler("notifications", notifications))
-
-    # Ajout du gestionnaire pour les messages texte
+    application.add_handler(CommandHandler("cancel", cancel))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
     logger.info("✅ Le bot est prêt et fonctionne...")
