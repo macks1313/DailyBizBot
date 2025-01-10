@@ -9,8 +9,8 @@ logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # Clés API
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_T")
-OPENAI_API_KEY = os.getenv("OPENAI_API")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Vérification des clés API
 if not TELEGRAM_TOKEN:
