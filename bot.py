@@ -8,9 +8,15 @@ import os
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Clés API
-TELEGRAM_TOKENOKEN = os.getenv("TELEGRAM_T")
+# Récupération des clés API depuis les variables d'environnement
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API")
+
+# Vérification des clés
+if not TELEGRAM_TOKEN:
+    raise ValueError("Le token Telegram (TELEGRAM_TOKEN) est manquant dans les variables d'environnement.")
+if not OPENAI_API_KEY:
+    raise ValueError("La clé API OpenAI (OPENAI_API) est manquante dans les variables d'environnement.")
 
 # Configuration de l'API OpenAI
 openai.api_key = OPENAI_API_KEY
@@ -95,7 +101,7 @@ def main():
     # Handler pour les messages texte
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
-    logger.info("Le bot est en cours de démarrage...")
+    logger.info("✅ Le bot démarre...")
     application.run_polling()
 
 if __name__ == "__main__":
