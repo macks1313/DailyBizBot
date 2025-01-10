@@ -30,7 +30,7 @@ if not OPENAI_API_KEY:
 openai.api_key = OPENAI_API_KEY
 
 # États pour les étapes interactives
-PROBLEME, SOLUTION, CIBLE, REVENUS, MARKETING, FINANCES = range(6)
+PROBLEME, SOLUTION, CIBLE, REVENUS, MARKETING, VALIDATION = range(6)
 
 # Fonction pour interagir avec OpenAI
 def openai_query(prompt):
@@ -44,46 +44,53 @@ def openai_query(prompt):
         return response["choices"][0]["message"]["content"].strip()
     except Exception as e:
         logger.error(f"Erreur lors de la requête OpenAI : {e}")
-        return "Erreur lors de la génération du contenu. Réessaye plus tard."
+        return "❌ Une erreur est survenue. Réessaye plus tard."
 
 # Commande /start
 async def start(update: Update, context: CallbackContext):
     message = (
-        "Bienvenue sur *DailyBizBot* 🦾 !\n\n"
-        "Voici ce que je peux faire pour toi :\n"
-        "- *Idées de business* (/news)\n"
-        "- *Création d'un business plan simplifié* (/plan)\n"
-        "- *Stratégies marketing adaptées* (/marketing)\n"
-        "- *Conseils financiers pour ton projet* (/finances)\n\n"
-        "Tape une commande pour commencer ou pose-moi une question directe !"
+        "👋 *Bienvenue sur DailyBizBot* 🦾 !\n\n"
+        "✨ Voici ce que je peux faire pour toi :\n\n"
+        "🔍 *Découvrir des idées de business* : /news\n"
+        "📋 *Créer un business plan* : /plan\n"
+        "📈 *Stratégies marketing* : /marketing\n"
+        "✅ *Valider une idée de business* : /validation\n"
+        "🛠️ *Accéder à des outils et ressources* : /ressources\n\n"
+        "⚡ Pose-moi une question ou utilise une commande pour commencer !\n"
+        "💡 N'oublie pas : les entrepreneurs audacieux réussissent toujours ! 🚀"
     )
     await update.message.reply_text(message, parse_mode="Markdown")
 
 # Gestion interactive pour /plan
 async def generate_business_plan_start(update: Update, context: CallbackContext):
     await update.message.reply_text(
-        "Commençons la création de ton business plan !\n\n🚀 Première étape : Décris le problème que ton business résout."
+        "📋 *Créons ton business plan simplifié !*\n\n"
+        "🚀 Première étape : Décris le *problème* que ton business résout. "
+        "Exemple : Les gens manquent de temps pour cuisiner sainement."
     )
     return PROBLEME
 
 async def collect_probleme(update: Update, context: CallbackContext):
     context.user_data['probleme'] = update.message.text
     await update.message.reply_text(
-        "👍 Super ! Maintenant, quelle est la *solution* que tu proposes pour résoudre ce problème ?"
+        "👍 Super ! Maintenant, quelle est la *solution* que tu proposes pour résoudre ce problème ?\n"
+        "Exemple : Je livre des repas sains et équilibrés directement chez eux."
     )
     return SOLUTION
 
 async def collect_solution(update: Update, context: CallbackContext):
     context.user_data['solution'] = update.message.text
     await update.message.reply_text(
-        "👌 Bien ! À qui s'adresse ton produit ou service ? Décris ta *cible*."
+        "👌 Bien joué ! À qui s'adresse ton produit ou service ? Décris ta *cible*.\n"
+        "Exemple : Les jeunes actifs entre 25 et 40 ans vivant en ville."
     )
     return CIBLE
 
 async def collect_cible(update: Update, context: CallbackContext):
     context.user_data['cible'] = update.message.text
     await update.message.reply_text(
-        "✨ Presque fini ! Comment ton business va-t-il *générer des revenus* ?"
+        "✨ Dernière étape ! Comment ton business va-t-il *générer des revenus* ?\n"
+        "Exemple : Un abonnement mensuel à 50 €."
     )
     return REVENUS
 
@@ -102,55 +109,60 @@ async def collect_revenus(update: Update, context: CallbackContext):
     business_plan = openai_query(prompt)
 
     await update.message.reply_text(
-        f"Voici ton business plan simplifié :\n\n{business_plan}\n\n"
-        "Tu veux aller plus loin ? Essaye /marketing pour une stratégie marketing ou /finances pour des conseils financiers !"
+        f"🚀 *Ton business plan est prêt !*\n\n{business_plan}\n\n"
+        "🔔 Tu peux maintenant explorer d'autres fonctionnalités comme :\n"
+        "📈 Stratégies marketing : /marketing\n"
+        "✅ Validation d'idée : /validation\n"
+        "🛠️ Outils pratiques : /ressources"
     )
     return ConversationHandler.END
 
-# Commande /marketing
-async def marketing_strategy(update: Update, context: CallbackContext):
-    await update.message.reply_text(
-        "Décris ton produit/service et ta cible en quelques mots pour que je puisse te proposer une stratégie marketing personnalisée."
-    )
-    return MARKETING
+# Commande /news
+async def news_business(update: Update, context: CallbackContext):
+    prompt = "Donne 5 idées de business innovantes et actuelles dans différents domaines."
+    ideas = openai_query(prompt)
+    await update.message.reply_text(f"💡 *Idées de business à explorer :*\n\n{ideas}")
 
-async def collect_marketing_info(update: Update, context: CallbackContext):
+# Commande /validation
+async def validation_business(update: Update, context: CallbackContext):
+    await update.message.reply_text(
+        "💭 Décris ton idée de business et je te dirai si elle est viable, avec des conseils pour l'améliorer."
+    )
+    return VALIDATION
+
+async def collect_validation(update: Update, context: CallbackContext):
     user_input = update.message.text
     prompt = (
-        f"Propose une stratégie marketing pour le produit/service suivant : {user_input}.\n"
-        "Précise des tactiques digitales (réseaux sociaux, SEO) et des approches directes."
+        f"Analyse l'idée de business suivante et donne une évaluation complète : {user_input}.\n"
+        "Inclut la viabilité, les obstacles potentiels, et des suggestions d'amélioration."
     )
-    strategy = openai_query(prompt)
-    await update.message.reply_text(f"Voici une stratégie marketing adaptée :\n\n{strategy}")
+    evaluation = openai_query(prompt)
+    await update.message.reply_text(f"📊 *Analyse de ton idée :*\n\n{evaluation}")
     return ConversationHandler.END
 
-# Commande /finances
-async def financial_advice(update: Update, context: CallbackContext):
-    await update.message.reply_text(
-        "Dis-moi combien tu souhaites investir ou ton budget initial, et je te donnerai des conseils financiers adaptés pour ton projet."
+# Commande /ressources
+async def resources(update: Update, context: CallbackContext):
+    message = (
+        "📚 *Outils et ressources pour entrepreneurs :*\n\n"
+        "🛠️ [Canva](https://www.canva.com) - Crée des designs professionnels.\n"
+        "📊 [Google Trends](https://trends.google.com) - Analyse les tendances du marché.\n"
+        "📈 [HubSpot](https://www.hubspot.com) - CRM gratuit pour gérer tes contacts.\n"
+        "🎓 [Coursera](https://www.coursera.org) - Cours en ligne gratuits.\n"
+        "💡 [Startup School](https://www.startupschool.org) - Ressources pour startups.\n\n"
+        "👉 Clique sur un lien pour en savoir plus !"
     )
-    return FINANCES
-
-async def collect_financial_info(update: Update, context: CallbackContext):
-    user_input = update.message.text
-    prompt = (
-        f"Donne des conseils financiers pour un projet avec le budget suivant : {user_input}. "
-        "Propose des stratégies de gestion des coûts, d'investissement initial, et des astuces pour maximiser les revenus."
-    )
-    advice = openai_query(prompt)
-    await update.message.reply_text(f"Voici des conseils financiers adaptés :\n\n{advice}")
-    return ConversationHandler.END
+    await update.message.reply_text(message, parse_mode="Markdown")
 
 # Gestion en cas d'annulation
 async def cancel(update: Update, context: CallbackContext):
-    await update.message.reply_text("Action annulée. Reviens quand tu veux !")
+    await update.message.reply_text("❌ *Action annulée.* Reviens quand tu veux pour continuer !")
     return ConversationHandler.END
 
 # Configuration principale du bot
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # Gestion de la commande /plan avec un ConversationHandler
+    # Handlers interactifs
     plan_handler = ConversationHandler(
         entry_points=[CommandHandler("plan", generate_business_plan_start)],
         states={
@@ -162,29 +174,20 @@ def main():
         fallbacks=[CommandHandler("cancel", cancel)],
     )
 
-    # Gestion de la commande /marketing
-    marketing_handler = ConversationHandler(
-        entry_points=[CommandHandler("marketing", marketing_strategy)],
+    validation_handler = ConversationHandler(
+        entry_points=[CommandHandler("validation", validation_business)],
         states={
-            MARKETING: [MessageHandler(filters.TEXT & ~filters.COMMAND, collect_marketing_info)],
-        },
-        fallbacks=[CommandHandler("cancel", cancel)],
-    )
-
-    # Gestion de la commande /finances
-    finances_handler = ConversationHandler(
-        entry_points=[CommandHandler("finances", financial_advice)],
-        states={
-            FINANCES: [MessageHandler(filters.TEXT & ~filters.COMMAND, collect_financial_info)],
+            VALIDATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, collect_validation)],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     )
 
     # Ajout des commandes
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("news", news_business))
+    application.add_handler(CommandHandler("ressources", resources))
     application.add_handler(plan_handler)
-    application.add_handler(marketing_handler)
-    application.add_handler(finances_handler)
+    application.add_handler(validation_handler)
 
     logger.info("✅ Le bot est prêt et fonctionne...")
     application.run_polling()
