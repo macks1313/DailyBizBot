@@ -12,6 +12,12 @@ logger = logging.getLogger(__name__)
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_T")
 OPENAI_API_KEY = os.getenv("OPENAI_API")
 
+# Vérification des clés API
+if not TELEGRAM_TOKEN:
+    logger.error("Le token Telegram est manquant. Vérifiez la variable d'environnement TELEGRAM_T.")
+if not OPENAI_API_KEY:
+    logger.error("La clé API OpenAI est manquante. Vérifiez la variable d'environnement OPENAI_API.")
+
 # Configuration de l'API OpenAI
 openai.api_key = OPENAI_API_KEY
 
