@@ -8,8 +8,8 @@ logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # Clés API
-TELEGRAM_TOKEN = "VOTRE_TOKEN_TELEGRAM"
-OPENAI_API_KEY = "VOTRE_API_KEY_OPENAI"
+TELEGRAM_TOKEN = "TOKEN_TELEGRAM"
+OPENAI_API_KEY = "API_KEY_OPENAI"
 
 # Configuration de l'API OpenAI
 openai.api_key = OPENAI_API_KEY
