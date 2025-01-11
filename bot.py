@@ -3,20 +3,20 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import openai
 
-# Увімкнення логів
+# Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
 )
 
-# Токени
-TELEGRAM_TOKEN = "TELEGRAM_TOKEN"
-OPENAI_API_KEY = "OPENAI_API_KEY"
+# Replace these with your actual tokens
+TELEGRAM_TOKEN = "TELEGRAM_TOKEN"  # Replace with your Telegram Bot Token
+OPENAI_API_KEY = "OPENAI_API_KEY"  # Replace with your OpenAI API Key
 
-# Ініціалізація OpenAI API
+# Initialize OpenAI API
 openai.api_key = OPENAI_API_KEY
 
-# Системні повідомлення для ChatGPT
+# System messages for ChatGPT
 SYSTEM_MESSAGES = {
     "default": "You are a sarcastic friend with dark humor, witty remarks, and occasional 18+ jokes.",
     "uk": "Ти бот-друг із чорним гумором, сарказмом, підколками та 18+ жартами. Відповідай українською.",
@@ -24,7 +24,7 @@ SYSTEM_MESSAGES = {
     "en": "You are a sarcastic friend with dark humor, witty remarks, and occasional 18+ jokes.",
 }
 
-# Генерація відповіді від ChatGPT
+# Generate a response from ChatGPT
 async def generate_response(user_input: str, language: str = "default") -> str:
     try:
         system_message = SYSTEM_MESSAGES.get(language, SYSTEM_MESSAGES["default"])
@@ -38,9 +38,9 @@ async def generate_response(user_input: str, language: str = "default") -> str:
         return response["choices"][0]["message"]["content"].strip()
     except openai.error.OpenAIError as e:
         logging.error(f"OpenAI API Error: {e}")
-        return "Щось не так з моїм інтернетом. Спробуй ще раз!"
+        return "Something went wrong with my internet. Please try again later!"
 
-# Визначення мови (без обмеження довжини)
+# Detect the language of the message
 def detect_language(text: str) -> str:
     if any(word in text.lower() for word in ["bonjour", "salut", "merci"]):
         return "fr"
@@ -49,26 +49,26 @@ def detect_language(text: str) -> str:
     else:
         return "en"
 
-# Обробка команди /start
+# Handle the /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Salut, je suis ton bot sarcastique préféré ! Parle-moi.")
+    await update.message.reply_text("Hi, I'm your sarcastic bot! Let's chat.")
 
-# Обробка текстових повідомлень
+# Handle text messages
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_message = update.message.text
     language = detect_language(user_message)
     bot_response = await generate_response(user_message, language)
     await update.message.reply_text(bot_response)
 
-# Запуск бота
+# Run the bot
 def main() -> None:
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-    # Додавання команд
+    # Add handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Запуск
+    # Start the bot
     application.run_polling()
 
 if __name__ == "__main__":
