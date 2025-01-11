@@ -1,5 +1,3 @@
-# bot/bot.py
-
 import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
@@ -12,8 +10,8 @@ logging.basicConfig(
 )
 
 # Токени
-TELEGRAM_TOKEN = "TELEGRAM_TOKEN"
-OPENAI_API_KEY = "OPENAI_API_TOKEN"
+TELEGRAM_TOKEN = "ВАШ_TELEGRAM_ТОКЕН"
+OPENAI_API_KEY = "ВАШ_OPENAI_КЛЮЧ"
 
 # Ініціалізація OpenAI API
 openai.api_key = OPENAI_API_KEY
@@ -53,7 +51,7 @@ def detect_language(text: str) -> str:
 
 # Обробка команди /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("?")
+    await update.message.reply_text("Salut, je suis ton bot sarcastique préféré ! Parle-moi.")
 
 # Обробка текстових повідомлень
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -73,5 +71,5 @@ def main() -> None:
     # Запуск
     application.run_polling()
 
-if name == "__main__":
+if __name__ == "__main__":
     main()
