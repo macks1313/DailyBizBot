@@ -10,8 +10,8 @@ logging.basicConfig(
 )
 
 # Токени
-TELEGRAM_TOKEN = "ВАШ_TELEGRAM_ТОКЕН"
-OPENAI_API_KEY = "ВАШ_OPENAI_КЛЮЧ"
+TELEGRAM_TOKEN = "TELEGRAM_TOKEN"
+OPENAI_API_KEY = "OPENAI_API_KEY"
 
 # Ініціалізація OpenAI API
 openai.api_key = OPENAI_API_KEY
